@@ -1,1 +1,0 @@
-#![feature(box_syntax)]

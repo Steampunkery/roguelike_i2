@@ -5,4 +5,4 @@ authors = ["The Ghost in the Machine <nitrogen1818@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-tcod = "*"
+rltk = {git = "https://github.com/thebracket/rltk_rs"}
