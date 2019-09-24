@@ -4,11 +4,11 @@ use crate::MAP_WIDTH;
 use crate::MAP_HEIGHT;
 use std::convert::TryInto;
 
-const MAX_ROOM_SIZE: i32 = 5;
-const MIN_ROOM_SIZE: i32 = 3;
-const MAX_ROOMS: i32 = 15;
+const MAX_ROOM_SIZE: i32 = 7;
+const MIN_ROOM_SIZE: i32 = 4;
+const MAX_ROOMS: usize = 7;
 
-type Map = Vec<Vec<TileType>>;
+pub type Map = Vec<Vec<TileType>>;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum TileType {
@@ -65,7 +65,7 @@ impl DungeonMap {
         let mut rooms = vec![];
 
 
-        for _ in 0..MAX_ROOMS {
+        while rooms.len() < MAX_ROOMS {
             // random width and height
             let w = random.range(MIN_ROOM_SIZE, MAX_ROOM_SIZE + 1);
             let h = random.range(MIN_ROOM_SIZE, MAX_ROOM_SIZE + 1);
