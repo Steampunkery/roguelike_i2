@@ -261,13 +261,6 @@ version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
-name = "ecroguelike"
-version = "0.1.0"
-dependencies = [
- "rltk 0.2.5 (git+https://github.com/thebracket/rltk_rs)",
-]
-
-[[package]]
 name = "either"
 version = "1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1030,6 +1023,13 @@ dependencies = [
  "rand_xorshift 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rayon 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "winit 0.20.0-alpha3 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "roguelike_i2"
+version = "0.1.0"
+dependencies = [
+ "rltk 0.2.5 (git+https://github.com/thebracket/rltk_rs)",
 ]
 
 [[package]]

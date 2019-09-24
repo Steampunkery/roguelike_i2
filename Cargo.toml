@@ -1,5 +1,5 @@
 [package]
-name = "ecroguelike"
+name = "roguelike_i2"
 version = "0.1.0"
 authors = ["The Ghost in the Machine <nitrogen1818@gmail.com>"]
 edition = "2018"
