@@ -3,13 +3,14 @@ extern crate rltk;
 mod map;
 mod util;
 mod player;
+mod level;
 
-use map::{TileType, DungeonMap};
+use map::{TileType};
 use util::{idx_xy, xy_idx};
 use rltk::{Rltk, GameState, Console, RandomNumberGenerator};
 use rltk::{Point, BaseMap, Algorithm2D, RGB, GRAY39};
-use std::convert::TryInto;
 use crate::player::Player;
+use level::Level;
 
 pub const MAP_HEIGHT: i32 = 50;
 pub const MAP_WIDTH: i32 = 80;
@@ -18,45 +19,52 @@ const SHOW: bool = false;
 
 pub struct State {
     player: Player,
-    map: DungeonMap,
+    level: Level,
     random: RandomNumberGenerator,
-    visible: Vec<Vec<bool>>,
-    discovered: Vec<Vec<bool>>,
 }
 
 impl State {
     pub fn new() -> State {
         let mut random = RandomNumberGenerator::new();
-        let map = DungeonMap::new(&mut random);
+        let level = Level::new(&mut random);
 
-        // Basically just false
-        let visible = vec![vec![false; MAP_WIDTH.try_into().unwrap()]; MAP_HEIGHT.try_into().unwrap()];
-        let discovered = vec![vec![false; MAP_WIDTH.try_into().unwrap()]; MAP_HEIGHT.try_into().unwrap()];
         let state = State {
             player: Player {
                 has_moved: true,
                 quit: false,
-                position: map.player_spawn,
+                position: level.map.player_spawn,
+                new_level: false
             },
-            map,
+            level,
             random,
-            visible,
-            discovered,
         };
         state
+    }
+
+    pub fn new_level(&mut self) {
+        let level = Level::new(&mut self.random);
+
+        self.player.has_moved = true;
+        self.player.new_level = false;
+        self.player.position = level.map.player_spawn;
+        self.level = level;
     }
 }
 
 impl GameState for State {
     fn tick(&mut self, ctx : &mut Rltk) {
-        self.player.handle_input(&self.map.map, ctx.key);
+        self.player.handle_input(&self.level.map, ctx.key);
 
         if self.player.quit {
             ctx.quit();
         }
 
+        if self.player.new_level {
+            self.new_level();
+        }
+
         if self.player.has_moved {
-            for y in self.visible.iter_mut() {
+            for y in self.level.visible.iter_mut() {
                 for x in y {
                     *x = false;
                 }
@@ -67,25 +75,27 @@ impl GameState for State {
             let fov: Vec<Point> = rltk::field_of_view(player_point, 8, self);
 
             for pt in fov {
-                self.visible[pt.y as usize][pt.x as usize] = true;
-                self.discovered[pt.y as usize][pt.x as usize] = true;
+                self.level.visible[pt.y as usize][pt.x as usize] = true;
+                self.level.discovered[pt.y as usize][pt.x as usize] = true;
             }
         }
 
         ctx.cls();
 
-        for (i, y) in self.map.map.iter().enumerate() {
+        for (i, y) in self.level.map.iter().enumerate() {
             for (j, x) in y.iter().enumerate() {
-                if self.visible[i][j] || SHOW {
+                if self.level.visible[i][j] || SHOW {
                     match x {
                         TileType::Floor => ctx.print(j as i32, i as i32, "."),
-                        TileType::Wall => ctx.print(j as i32, i as i32, "+")
+                        TileType::Wall => ctx.print(j as i32, i as i32, "+"),
+                        TileType::Stair => ctx.print(j as i32, i as i32, ">"),
                     }
                 }
-                if self.discovered[i][j] && !self.visible[i][j]{
+                if self.level.discovered[i][j] && !self.level.visible[i][j]{
                     match x {
                         TileType::Floor => ctx.print_color(j as i32, i as i32, RGB::named(GRAY39), RGB::new(), "."),
-                        TileType::Wall => ctx.print_color(j as i32, i as i32, RGB::named(GRAY39), RGB::new(), "+")
+                        TileType::Wall => ctx.print_color(j as i32, i as i32, RGB::named(GRAY39), RGB::new(), "+"),
+                        TileType::Stair => ctx.print_color(j as i32, i as i32, RGB::named(GRAY39), RGB::new(), ">")
                     }
                 }
             }
@@ -99,7 +109,7 @@ impl BaseMap for State {
     // We'll use this one - if its a wall, we can't see through it
     fn is_opaque(&self, idx: i32) -> bool {
         let (x, y) = idx_xy(idx as usize);
-        self.map.map[y as usize][x as usize] == TileType::Wall
+        self.level.map[y as usize][x as usize] == TileType::Wall
     }
     fn get_available_exits(&self, _idx: i32) -> Vec<(i32, f32)> {
         Vec::new()

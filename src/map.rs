@@ -3,6 +3,8 @@ use rltk::RandomNumberGenerator;
 use crate::MAP_WIDTH;
 use crate::MAP_HEIGHT;
 use std::convert::TryInto;
+use std::ops::{Index, IndexMut};
+use std::slice::Iter;
 
 const MAX_ROOM_SIZE: i32 = 7;
 const MIN_ROOM_SIZE: i32 = 4;
@@ -13,7 +15,8 @@ pub type Map = Vec<Vec<TileType>>;
 #[derive(PartialEq, Copy, Clone)]
 pub enum TileType {
     Wall,
-    Floor
+    Floor,
+    Stair,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -53,9 +56,10 @@ impl Rect {
 }
 
 pub struct DungeonMap {
-    pub map: Map,
+    map: Map,
     pub rooms: Vec<Rect>,
-    pub player_spawn: (i32, i32)
+    pub player_spawn: (i32, i32),
+    pub stair: (i32, i32),
 }
 
 impl DungeonMap {
@@ -102,12 +106,21 @@ impl DungeonMap {
             }
         }
 
+        let stair = rooms[rooms.len() - 1].center();
+
+        map[stair.1 as usize][stair.0 as usize] = TileType::Stair;
+
         DungeonMap {
-            map,
             player_spawn: rooms[0].center(),
+            stair,
+            map,
             rooms,
         }
 
+    }
+
+    pub fn iter(&self) -> Iter<Vec<TileType>> {
+        self.map.iter()
     }
 
     fn create_room(room: Rect, map: &mut Map) {
@@ -129,5 +142,19 @@ impl DungeonMap {
             map[y as usize][x as usize] = TileType::Floor;
         }
 
+    }
+}
+
+impl Index<usize> for DungeonMap {
+    type Output = Vec<TileType>;
+
+    fn index(&self, idx: usize) -> &Self::Output {
+        &self.map[idx]
+    }
+}
+
+impl IndexMut<usize> for DungeonMap {
+    fn index_mut(&mut self, idx: usize) -> &mut Self::Output {
+        &mut self.map[idx]
     }
 }
